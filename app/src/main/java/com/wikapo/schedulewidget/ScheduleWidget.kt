@@ -3,6 +3,10 @@ package com.wikapo.schedulewidget
 import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.unit.dp
 import androidx.glance.Button
 import androidx.glance.GlanceId
@@ -17,9 +21,11 @@ import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.padding
 import androidx.glance.text.Text
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.net.URL
-import java.util.Calendar
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import javax.net.ssl.HttpsURLConnection
 
 
@@ -27,29 +33,26 @@ class ScheduleWidgetReciever : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = ScheduleWidget()
 }
 
-val calendar = Calendar.getInstance()
+var date: LocalDate = LocalDate.now()
 
 class ScheduleWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        fetchSchedule()
-
-        update(context, id)
-
         provideContent {
             ScheduleContent(context, id)
         }
     }
 }
 
-var result = "LOL"
 
-suspend fun fetchSchedule(date: String = "") {
-    get("https://eti.thefen.me/schedule/$date")
+suspend fun fetchSchedule(date: LocalDate): String {
+    return get("https://eti.thefen.me/schedule/${date.format(DateTimeFormatter.ISO_DATE)}")
 }
 
-suspend fun get(url: String) = withContext(Dispatchers.IO) {
+suspend fun get(url: String): String = withContext(Dispatchers.IO) {
+    Log.d("Request", "sending for [$url]")
     with(URL(url).openConnection() as HttpsURLConnection) {
+        var result = "Testing"
 
         inputStream.bufferedReader().use {
             it.lines().forEach { line ->
@@ -57,12 +60,18 @@ suspend fun get(url: String) = withContext(Dispatchers.IO) {
                 result += line + "\n"
             }
         }
+        return@withContext result
     }
 }
 
-//Log.d("calendar","${calendar.get(Calendar.YEAR)}-${calendar.get(Calendar.MONTH) + 1}-${calendar.get(Calendar.DATE)})"
 @Composable
 fun ScheduleContent(context: Context, id: GlanceId) {
+    val scope = rememberCoroutineScope()
+    val schedule = remember { mutableStateOf("") }
+    LaunchedEffect(scope) {
+        schedule.value = fetchSchedule(date)
+    }
+
     Column(
         modifier = GlanceModifier.fillMaxSize(),
         verticalAlignment = Alignment.Top,
@@ -75,21 +84,23 @@ fun ScheduleContent(context: Context, id: GlanceId) {
             Button(
                 text = "<=",
                 onClick = {
-                    calendar.roll(Calendar.DATE, false)
-//                    ScheduleWidget().update(context, id)
+                    date = date.minusDays(1)
+                    scope.launch { schedule.value = fetchSchedule(date) }
                 }
             )
             Text(
-                text = "${calendar.get(Calendar.DATE)}.${calendar.get(Calendar.MONTH) + 1}." +
-                        "${calendar.get(Calendar.YEAR)}",
+                text = "${date.format(DateTimeFormatter.ISO_DATE)}",
                 modifier = GlanceModifier.padding(6.dp)
             )
             Button(
                 text = "=>",
-                onClick = { calendar.roll(Calendar.DATE, false) }
+                onClick = {
+                    date = date.plusDays(1)
+                    scope.launch { schedule.value = fetchSchedule(date) }
+                }
             )
         }
-        Text(result, modifier = GlanceModifier.padding(24.dp))
+        Text(schedule.value, modifier = GlanceModifier.padding(24.dp))
         Button(
             text = "Reset",
             onClick = {}
