@@ -14,6 +14,7 @@ import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.ImageProvider
+import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
@@ -162,6 +163,7 @@ fun ScheduleContent() {
                                 .background(if (index % 2 == 1) GlanceTheme.colors.secondaryContainer else GlanceTheme.colors.tertiaryContainer)
                                 .cornerRadius(12.5.dp)
                                 .height(50.dp)
+                                .clickable(onClick = actionStartActivity<MainActivity>())
                         ) {
                             Text(
                                 text = "[${lesson.kind}]\t\t${lesson.name}",
