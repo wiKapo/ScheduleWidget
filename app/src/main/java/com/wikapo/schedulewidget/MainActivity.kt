@@ -38,6 +38,11 @@ placeholder = {Text("da")},
 
 )*/
 
+//TODO Ustawienia
+// Przezroczystość
+// Pokaż weekend
+// TODO Pokaż plan z prowadzącymi
+
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {
     Text(
