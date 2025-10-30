@@ -30,14 +30,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-//val message = remember { mutableStateOf("") }
-
-/*TextField(
-value = message.value,
-placeholder = {Text("da")},
-
-)*/
-
 //TODO Ustawienia
 // Przezroczystość
 // Pokaż weekend

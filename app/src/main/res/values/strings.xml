@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">ScheduleWidget</string>
+    <string name="schedule_widget_description">Opis :></string>
 </resources>
