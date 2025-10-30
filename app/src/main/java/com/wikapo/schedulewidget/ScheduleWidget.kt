@@ -7,11 +7,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.glance.Button
+import androidx.glance.ColorFilter
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
+import androidx.glance.GlanceTheme
+import androidx.glance.Image
+import androidx.glance.ImageProvider
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
@@ -20,6 +22,7 @@ import androidx.glance.appwidget.lazy.LazyColumn
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
 import androidx.glance.layout.Alignment
+import androidx.glance.layout.Box
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
@@ -65,7 +68,6 @@ class ScheduleWidget : GlanceAppWidget() {
         }
     }
 }
-//TODO Kolory z material3
 //TODO Dzień tygodnia na 3+ szerokość
 //TODO Krótka nazwa przedmiotu i godzina na szerokości 2
 //TODO Przsuwając aplikację można otworzyć ustawienia
@@ -105,7 +107,7 @@ fun ScheduleContent() {
 
     Log.d("CHECK2elel", schedule.toString())
     Column(
-        modifier = GlanceModifier.fillMaxSize().background(Color(64, 64, 64, 64)),
+        modifier = GlanceModifier.fillMaxSize().background(GlanceTheme.colors.widgetBackground),
         verticalAlignment = Alignment.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -114,23 +116,40 @@ fun ScheduleContent() {
             verticalAlignment = Alignment.CenterVertically,
             modifier = GlanceModifier.padding(vertical = 5.dp)
         ) {
-            Button(
-                text = "<=",
-                onClick = { date.value = date.value.minusDays(1) }
-            )
+            Box(
+                modifier = GlanceModifier
+                    .background(GlanceTheme.colors.primary)
+                    .cornerRadius(14.dp)
+                    .clickable { date.value = date.value.minusDays(1) }
+            ) {
+                Image(
+                    modifier = GlanceModifier.padding(6.dp),
+                    provider = ImageProvider(R.drawable.arrow_back),
+                    contentDescription = "<=",
+                    colorFilter = ColorFilter.tint(GlanceTheme.colors.inverseOnSurface)
+                )
+            }
             Text(
                 text = "${date.value.format(DateTimeFormatter.ISO_DATE)}",
+                style = TextStyle(color = GlanceTheme.colors.onSurface),
                 modifier = GlanceModifier.padding(6.dp).clickable { date.value = LocalDate.now() }
             )
-            Button(
-                text = "=>",
-                onClick = { date.value = date.value.plusDays(1) }
-            )
+            Box(
+                modifier = GlanceModifier
+                    .background(GlanceTheme.colors.primary)
+                    .cornerRadius(15.dp)
+                    .clickable { date.value = date.value.plusDays(1) }) {
+                Image(
+                    modifier = GlanceModifier.padding(6.dp),
+                    provider = ImageProvider(R.drawable.arrow_forward),
+                    contentDescription = "=>",
+                    colorFilter = ColorFilter.tint(GlanceTheme.colors.inverseOnSurface)
+                )
+            }
         }
         LazyColumn(
             modifier = GlanceModifier
                 .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
-                .cornerRadius(25.dp)
                 .fillMaxSize()
         ) {
             if (schedule.isNotEmpty())
@@ -140,22 +159,29 @@ fun ScheduleContent() {
                         Column(
                             modifier = GlanceModifier
                                 .padding(10.dp, 5.dp)
-                                .background(Color(32, 32, 32, 32 + 32 * ((index + 1) % 2)))
+                                .background(if (index % 2 == 1) GlanceTheme.colors.secondaryContainer else GlanceTheme.colors.tertiaryContainer)
                                 .cornerRadius(12.5.dp)
                                 .height(50.dp)
                         ) {
                             Text(
                                 text = "[${lesson.kind}]\t\t${lesson.name}",
-                                style = TextStyle(fontWeight = FontWeight.Bold)
+                                style = TextStyle(
+                                    fontWeight = FontWeight.Bold,
+                                    color = GlanceTheme.colors.onSurface
+                                )
                             )
                             Row(modifier = GlanceModifier.fillMaxWidth()) {
-                                Text(text = "${lesson.startHour}:00 - ${lesson.endHour}:00")
+                                Text(
+                                    text = "${lesson.startHour}:00 - ${lesson.endHour}:00",
+                                    style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant)
+                                )
                                 Text(
                                     modifier = GlanceModifier.fillMaxWidth(),
                                     text = lesson.place,
                                     style = TextStyle(
                                         fontWeight = FontWeight.Bold,
-                                        textAlign = TextAlign.End
+                                        textAlign = TextAlign.End,
+                                        color = GlanceTheme.colors.onSurface
                                     )
                                 )
                             }
