@@ -60,7 +60,7 @@ data class Lesson(
     @JsonNames("end_hour") val endHour: Int = 0,
 )
 
-class ScheduleWidgetReciever : GlanceAppWidgetReceiver() {
+class ScheduleWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = ScheduleWidget()
 }
 
