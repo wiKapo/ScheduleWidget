@@ -31,6 +31,8 @@ import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
+import androidx.glance.preview.ExperimentalGlancePreviewApi
+import androidx.glance.preview.Preview
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
@@ -95,14 +97,26 @@ suspend fun get(url: String): String = withContext(Dispatchers.IO) {
     }
 }
 
+fun getExampleSchedule(): List<Lesson> {
+    Log.d("Example", "Loading example schedule")
+    val schedule: MutableList<Lesson> = ArrayList()
+    for (i in 0..10) {
+        schedule += Lesson(name = "Lekcja $i", place = "Sala ${i + 100}")
+    }
+    return schedule
+}
+
 @Composable
-fun ScheduleContent() {
+fun ScheduleContent(doFetchSchedule: Boolean = true) {
     val schedule = remember { mutableStateListOf<Lesson>() }
     val date = remember { mutableStateOf(LocalDate.now()) }
+    if (!doFetchSchedule)
+        schedule.addAll(getExampleSchedule())
 
     LaunchedEffect(date.value) {
         schedule.clear()
-        schedule.addAll(fetchSchedule(date.value))
+        if (doFetchSchedule)
+            schedule.addAll(fetchSchedule(date.value))
         Log.d("CHECK UPDATE", schedule.toString())
     }
 
@@ -148,12 +162,12 @@ fun ScheduleContent() {
                 )
             }
         }
-        LazyColumn(
-            modifier = GlanceModifier
-                .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
-                .fillMaxSize()
-        ) {
-            if (schedule.isNotEmpty())
+        if (schedule.isNotEmpty())
+            LazyColumn(
+                modifier = GlanceModifier
+                    .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
+                    .fillMaxSize()
+            ) {
                 items(schedule.size) { index ->
                     val lesson = schedule[index]
                     Column {
@@ -191,14 +205,26 @@ fun ScheduleContent() {
                         Spacer(GlanceModifier.height(5.dp))
                     }
                 }
-            else
-                item {
-                    Text(
-                        text = "NIC NIE MA",
-                        modifier = GlanceModifier.fillMaxSize(),
-                        style = TextStyle(textAlign = TextAlign.Center)
-                    )
-                }
-        }
+            }
+        else
+            Column(
+                modifier = GlanceModifier.fillMaxSize(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "BRAK ZAJĘĆ",
+                    style = TextStyle(textAlign = TextAlign.Center)
+                )
+            }
     }
+}
+
+@OptIn(ExperimentalGlancePreviewApi::class)
+@Preview(300, 400)
+@Preview(200, 400)
+@Preview(160, 160)
+@Composable
+private fun ScheduleContentPreview() {
+    ScheduleContent(false)
 }

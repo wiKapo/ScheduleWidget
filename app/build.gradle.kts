@@ -36,8 +36,8 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlin{
-        compilerOptions{
+    kotlin {
+        compilerOptions {
             jvmTarget = JvmTarget.fromTarget("11")
         }
     }
@@ -70,4 +70,7 @@ dependencies {
     implementation(libs.androidx.glance.material)
     //For serialization
     implementation(libs.kotlinx.serialization.json)
+    //for glance previews
+    implementation(libs.androidx.glance.appwidget.preview)
+    implementation(libs.androidx.glance.preview)
 }
