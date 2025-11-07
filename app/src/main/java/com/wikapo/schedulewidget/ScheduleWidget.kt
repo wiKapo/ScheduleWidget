@@ -1,7 +1,11 @@
 package com.wikapo.schedulewidget
 
+import android.app.PendingIntent
+import android.appwidget.AppWidgetManager
 import android.content.Context
+import android.content.Intent
 import android.util.Log
+import android.widget.RemoteViews
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
@@ -49,6 +53,27 @@ class ScheduleWidget : GlanceAppWidget() {
         provideContent {
             ScheduleContent()
         }
+    }
+
+    private fun getErrorIntent(context: Context, throwable: Throwable): PendingIntent {
+        val intent = Intent(context, ScheduleWidget::class.java)
+        intent.setAction("widgetError")
+        return PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+    }
+
+    override fun onCompositionError(
+        context: Context,
+        glanceId: GlanceId,
+        appWidgetId: Int,
+        throwable: Throwable
+    ) {
+        val rv = RemoteViews(context.packageName, R.layout.error_layout)
+        rv.setTextViewText(
+            R.id.error_text_view,
+            "Error was thrown. \nThis is a custom view \nError Message: `${throwable.message}`"
+        )
+        rv.setOnClickPendingIntent(R.id.error_icon, getErrorIntent(context, throwable))
+        AppWidgetManager.getInstance(context).updateAppWidget(appWidgetId, rv)
     }
 }
 //TODO Dzień tygodnia na 3+ szerokość

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/background"
+    android:layout_width="match_parent"
+    android:textSize="24sp"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <!--    style="@style/Widget.MyApplication.AppWidget.Error"-->
+    <TextView
+        android:id="@+id/error_title_view"
+        android:layout_width="match_parent"
+        android:textColor="@color/white"
+        android:layout_height="wrap_content"
+        android:text="@string/widget_error_title" />
+    <!--        android:textFontWeight="800"-->
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:orientation="horizontal"
+        android:paddingTop="4dp"
+        android:layout_height="match_parent">
+
+        <ImageButton
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_gravity="center"
+            android:tint="@color/white"
+            android:id="@+id/error_icon"
+            android:src="@drawable/ic_launcher_foreground"
+            />
+        <TextView
+            android:id="@+id/error_text_view"
+            android:layout_width="wrap_content"
+            android:textColor="@color/white"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:padding="8dp"
+            android:textSize="16sp"
+            android:layout_weight="1"
+            android:text="Useful Error Message!" />
+    </LinearLayout>
+
+</LinearLayout>
