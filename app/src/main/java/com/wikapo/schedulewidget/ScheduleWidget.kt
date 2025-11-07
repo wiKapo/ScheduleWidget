@@ -37,28 +37,8 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonNames
-import java.net.URL
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import javax.net.ssl.HttpsURLConnection
-
-@OptIn(ExperimentalSerializationApi::class)
-@Serializable
-data class Lesson(
-    @JsonNames("subject_id") val subjectId: String = "",
-    val name: String = "",
-    val kind: Char = '#',
-    val teacher: String = "",
-    val place: String = "",
-    @JsonNames("start_hour") val startHour: Int = 0,
-    @JsonNames("end_hour") val endHour: Int = 0,
-)
 
 class ScheduleWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = ScheduleWidget()
@@ -75,48 +55,22 @@ class ScheduleWidget : GlanceAppWidget() {
 //TODO Krótka nazwa przedmiotu i godzina na szerokości 2
 //TODO Przsuwając aplikację można otworzyć ustawienia
 //TODO Przytrzymując widgeta pojawai się FAB do ustawień widgeta
-
-suspend fun fetchSchedule(date: LocalDate): List<Lesson> {
-    val result = get("https://eti.thefen.me/schedule/${date.format(DateTimeFormatter.ISO_DATE)}")
-
-    return Json.decodeFromString<List<Lesson>>(result)
-}
-
-suspend fun get(url: String): String = withContext(Dispatchers.IO) {
-    Log.d("Request", "sending for [$url]")
-    with(URL(url).openConnection() as HttpsURLConnection) {
-        var result = ""
-
-        inputStream.bufferedReader().use {
-            it.lines().forEach { line ->
-                Log.d("InputStream", line)
-                result += line + "\n"
-            }
-        }
-        return@withContext result
-    }
-}
-
-fun getExampleSchedule(): List<Lesson> {
-    Log.d("Example", "Loading example schedule")
-    val schedule: MutableList<Lesson> = ArrayList()
-    for (i in 0..10) {
-        schedule += Lesson(name = "Lekcja $i", place = "Sala ${i + 100}")
-    }
-    return schedule
-}
+//TODO Prgogress bar obecnie trwających zajęć
 
 @Composable
 fun ScheduleContent(doFetchSchedule: Boolean = true) {
     val schedule = remember { mutableStateListOf<Lesson>() }
     val date = remember { mutableStateOf(LocalDate.now()) }
+    val scheduleInstance = ScheduleRequester()
     if (!doFetchSchedule)
-        schedule.addAll(getExampleSchedule())
+        schedule.addAll(scheduleInstance.getExampleSchedule(10))
+
 
     LaunchedEffect(date.value) {
         schedule.clear()
-        if (doFetchSchedule)
-            schedule.addAll(fetchSchedule(date.value))
+        if (doFetchSchedule) {
+                    schedule.addAll(scheduleInstance.fetchSchedule(date.value))
+        }
         Log.d("CHECK UPDATE", schedule.toString())
     }
 
