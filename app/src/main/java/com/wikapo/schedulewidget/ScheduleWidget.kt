@@ -20,6 +20,7 @@ import androidx.glance.Image
 import androidx.glance.ImageProvider
 import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
+import androidx.glance.appwidget.CircularProgressIndicator
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.cornerRadius
@@ -35,12 +36,15 @@ import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
+import androidx.glance.layout.size
 import androidx.glance.preview.ExperimentalGlancePreviewApi
 import androidx.glance.preview.Preview
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.time.delay
 import java.time.Duration
 import java.time.LocalDate
@@ -87,6 +91,7 @@ class ScheduleWidget : GlanceAppWidget() {
 @Composable
 fun ScheduleContent(doFetchSchedule: Boolean = true) {
     val schedule = remember { mutableStateListOf<Lesson>() }
+    val loading = remember { mutableStateOf(true) }
     val date = remember { mutableStateOf(LocalDate.now()) }
     val scheduleInstance = ScheduleRequester()
     if (!doFetchSchedule)
@@ -94,16 +99,25 @@ fun ScheduleContent(doFetchSchedule: Boolean = true) {
 
 
     LaunchedEffect(date.value) {
+        loading.value = true
         schedule.clear()
         if (doFetchSchedule) {
+            val job = launch {
                 try {
                     schedule.addAll(scheduleInstance.fetchSchedule(date.value))
                     delay(Duration.ofMillis(200))
+                    loading.value = false
                 } catch (e: Exception) {
                     Log.d("ERROR", e.toString())
                     schedule.add(Lesson(subjectId = "ERR", name = e.toString()))
+                } finally {
+                    loading.value = false
                 }
+            }
+            delay(Duration.ofMillis(2000))
+            job.cancelAndJoin()
         }
+        loading.value = false
         Log.d("CHECK UPDATE", schedule.toString())
     }
 
@@ -120,9 +134,9 @@ fun ScheduleContent(doFetchSchedule: Boolean = true) {
         ) {
             Box(
                 modifier = GlanceModifier
-                    .background(GlanceTheme.colors.primary)
+                    .background(if (!loading.value) GlanceTheme.colors.primary else GlanceTheme.colors.secondary)
                     .cornerRadius(14.dp)
-                    .clickable { date.value = date.value.minusDays(1) }
+                    .clickable { if (!loading.value) date.value = date.value.minusDays(1) }
             ) {
                 Image(
                     modifier = GlanceModifier.padding(6.dp),
@@ -134,13 +148,14 @@ fun ScheduleContent(doFetchSchedule: Boolean = true) {
             Text(
                 text = "${date.value.format(DateTimeFormatter.ISO_DATE)}",
                 style = TextStyle(color = GlanceTheme.colors.onSurface),
-                modifier = GlanceModifier.padding(6.dp).clickable { date.value = LocalDate.now() }
+                modifier = GlanceModifier.padding(6.dp)
+                    .clickable { if (!loading.value) date.value = LocalDate.now() }
             )
             Box(
                 modifier = GlanceModifier
-                    .background(GlanceTheme.colors.primary)
+                    .background(if (!loading.value) GlanceTheme.colors.primary else GlanceTheme.colors.secondary)
                     .cornerRadius(15.dp)
-                    .clickable { date.value = date.value.plusDays(1) }) {
+                    .clickable { if (!loading.value) date.value = date.value.plusDays(1) }) {
                 Image(
                     modifier = GlanceModifier.padding(6.dp),
                     provider = ImageProvider(R.drawable.arrow_forward),
@@ -212,10 +227,19 @@ fun ScheduleContent(doFetchSchedule: Boolean = true) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    text = "BRAK ZAJĘĆ",
-                    style = TextStyle(textAlign = TextAlign.Center)
-                )
+                if (loading.value)
+                    CircularProgressIndicator(
+                        modifier = GlanceModifier.size(50.dp),
+                        color = GlanceTheme.colors.primary
+                    )
+                else
+                    Text(
+                        text = "BRAK ZAJĘĆ",
+                        style = TextStyle(
+                            textAlign = TextAlign.Center,
+                            color = GlanceTheme.colors.onSurface
+                        )
+                    )
             }
     }
 }
