@@ -41,6 +41,8 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
+import kotlinx.coroutines.time.delay
+import java.time.Duration
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -94,7 +96,13 @@ fun ScheduleContent(doFetchSchedule: Boolean = true) {
     LaunchedEffect(date.value) {
         schedule.clear()
         if (doFetchSchedule) {
+                try {
                     schedule.addAll(scheduleInstance.fetchSchedule(date.value))
+                    delay(Duration.ofMillis(200))
+                } catch (e: Exception) {
+                    Log.d("ERROR", e.toString())
+                    schedule.add(Lesson(subjectId = "ERR", name = e.toString()))
+                }
         }
         Log.d("CHECK UPDATE", schedule.toString())
     }
@@ -150,37 +158,50 @@ fun ScheduleContent(doFetchSchedule: Boolean = true) {
                 items(schedule.size) { index ->
                     val lesson = schedule[index]
                     Column {
-                        Column(
-                            modifier = GlanceModifier
-                                .padding(10.dp, 5.dp)
-                                .background(if (index % 2 == 1) GlanceTheme.colors.secondaryContainer else GlanceTheme.colors.tertiaryContainer)
-                                .cornerRadius(12.5.dp)
-                                .height(50.dp)
-                                .clickable(onClick = actionStartActivity<MainActivity>())
-                        ) {
+                        if (lesson.subjectId == "ERR")
                             Text(
-                                text = "[${lesson.kind}]\t\t${lesson.name}",
+                                text = lesson.name,
                                 style = TextStyle(
-                                    fontWeight = FontWeight.Bold,
-                                    color = GlanceTheme.colors.onSurface
-                                )
+                                    color = GlanceTheme.colors.onError
+                                ),
+                                modifier = GlanceModifier
+                                    .background(GlanceTheme.colors.error)
+                                    .fillMaxWidth()
+                                    .padding(7.5.dp)
+                                    .cornerRadius(12.5.dp)
                             )
-                            Row(modifier = GlanceModifier.fillMaxWidth()) {
+                        else
+                            Column(
+                                modifier = GlanceModifier
+                                    .padding(10.dp, 5.dp)
+                                    .background(if (index % 2 == 1) GlanceTheme.colors.secondaryContainer else GlanceTheme.colors.tertiaryContainer)
+                                    .cornerRadius(12.5.dp)
+                                    .height(50.dp)
+                                    .clickable(onClick = actionStartActivity<MainActivity>())
+                            ) {
                                 Text(
-                                    text = "${lesson.startHour}:00 - ${lesson.endHour}:00",
-                                    style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant)
-                                )
-                                Text(
-                                    modifier = GlanceModifier.fillMaxWidth(),
-                                    text = lesson.place,
+                                    text = "[${lesson.kind}]\t\t${lesson.name}",
                                     style = TextStyle(
                                         fontWeight = FontWeight.Bold,
-                                        textAlign = TextAlign.End,
                                         color = GlanceTheme.colors.onSurface
                                     )
                                 )
+                                Row(modifier = GlanceModifier.fillMaxWidth()) {
+                                    Text(
+                                        text = "${lesson.startHour}:00 - ${lesson.endHour}:00",
+                                        style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant)
+                                    )
+                                    Text(
+                                        modifier = GlanceModifier.fillMaxWidth(),
+                                        text = lesson.place,
+                                        style = TextStyle(
+                                            fontWeight = FontWeight.Bold,
+                                            textAlign = TextAlign.End,
+                                            color = GlanceTheme.colors.onSurface
+                                        )
+                                    )
+                                }
                             }
-                        }
                         Spacer(GlanceModifier.height(5.dp))
                     }
                 }
