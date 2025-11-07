@@ -93,7 +93,7 @@ class ScheduleWidget : GlanceAppWidget() {
 @Composable
 fun ScheduleContent(doFetchSchedule: Boolean = true) {
     val schedule = remember { mutableStateListOf<Lesson>() }
-    val loading = remember { mutableStateOf(true) }
+    val loading = remember { mutableStateOf(false) }
     val date = remember { mutableStateOf(LocalDate.now()) }
     val scheduleInstance = ScheduleRequester()
     if (!doFetchSchedule)
