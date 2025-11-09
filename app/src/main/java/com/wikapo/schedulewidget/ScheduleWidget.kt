@@ -120,7 +120,7 @@ fun ScheduleContent(doFetchSchedule: Boolean = true) {
         Row(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalAlignment = Alignment.CenterVertically,
-            modifier = GlanceModifier.padding(vertical = 5.dp)
+            modifier = GlanceModifier.padding(vertical = 4.dp)
         ) {
             Box(
                 modifier = GlanceModifier
@@ -157,14 +157,14 @@ fun ScheduleContent(doFetchSchedule: Boolean = true) {
         if (schedule.isNotEmpty())
             LazyColumn(
                 modifier = GlanceModifier
-                    .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
+                    .padding(horizontal = 10.dp)
                     .fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 items(schedule.size) { index ->
                     val lesson = schedule[index]
                     Column(
-                        modifier = GlanceModifier.fillMaxWidth(),
+                        modifier = GlanceModifier.fillMaxWidth().padding(bottom = 6.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         when (lesson.subjectId) {
@@ -199,7 +199,6 @@ fun ScheduleContent(doFetchSchedule: Boolean = true) {
                                     .padding(10.dp, 5.dp)
                                     .background(if (index % 2 == 1) GlanceTheme.colors.secondaryContainer else GlanceTheme.colors.tertiaryContainer)
                                     .cornerRadius(12.5.dp)
-                                    .height(50.dp)
                                     .clickable(
                                         onClick = actionStartActivity<MainActivity>(
                                             parameters = actionParametersOf(
@@ -213,7 +212,8 @@ fun ScheduleContent(doFetchSchedule: Boolean = true) {
                                     style = TextStyle(
                                         fontWeight = FontWeight.Bold,
                                         color = GlanceTheme.colors.onSurface
-                                    )
+                                    ),
+                                    maxLines = 1
                                 )
                                 Row(modifier = GlanceModifier.fillMaxWidth()) {
                                     Text(
@@ -232,7 +232,6 @@ fun ScheduleContent(doFetchSchedule: Boolean = true) {
                                 }
                             }
                         }
-                        Spacer(GlanceModifier.height(5.dp))
                     }
                 }
                 if (schedule[0].subjectId == "ERR" || schedule[0].subjectId == "TIMEOUT") {
@@ -251,6 +250,9 @@ fun ScheduleContent(doFetchSchedule: Boolean = true) {
                             )
                         }
                     }
+                }
+                item {
+                    Spacer(modifier = GlanceModifier.height(5.dp))
                 }
             }
         else
