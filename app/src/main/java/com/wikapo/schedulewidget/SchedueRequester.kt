@@ -7,6 +7,7 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNames
+import java.net.SocketTimeoutException
 import java.net.URL
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -26,15 +27,34 @@ data class Lesson(
 
 class ScheduleRequester() {
     suspend fun fetchSchedule(date: LocalDate): List<Lesson> {
-//        throw IllegalAccessException("adhbahd hjdsfj hsdvfjvdsjhvk jcvsjgw yet ri 7 364723gyu qggfkyg4f yuwegu jhhahdjahdjhadsjhdhajhsd")
-        val result =
-            get("https://eti.thefen.me/schedule/${date.format(DateTimeFormatter.ISO_DATE)}")
-        return Json.decodeFromString<List<Lesson>>(result)
+        try {
+            return Json.decodeFromString<List<Lesson>>(
+                get(
+                    "https://eti.thefen.me/schedule/${date.format(DateTimeFormatter.ISO_DATE)}",
+                    5000
+                )
+            )
+        } catch (_: SocketTimeoutException) {
+            val schedule: MutableList<Lesson> = ArrayList()
+            schedule.add(
+                Lesson(
+                    subjectId = "TIMEOUT",
+                    name = "Nie udało się nawiązać połączenia z serwerem. Spróbuj ponownie później."
+                )
+            )
+            return schedule
+        } catch (e: Exception) {
+            val schedule: MutableList<Lesson> = ArrayList()
+            schedule.add(Lesson(subjectId = "ERR", name = e.toString()))
+            return schedule
+        }
     }
 
-    suspend fun get(url: String): String = withContext(Dispatchers.IO) {
+    suspend fun get(url: String, timeout: Int): String = withContext(Dispatchers.IO) {
         Log.d("Request", "sending for [$url]")
-        with(URL(url).openConnection() as HttpsURLConnection) {
+        val connection = URL(url).openConnection()
+        connection.connectTimeout = timeout
+        with(connection as HttpsURLConnection) {
             var result = ""
 
             inputStream.bufferedReader().use {

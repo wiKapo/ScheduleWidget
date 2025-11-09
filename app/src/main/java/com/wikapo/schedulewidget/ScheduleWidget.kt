@@ -45,8 +45,6 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
-import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.time.delay
 import java.time.Duration
 import java.time.LocalDate
@@ -65,7 +63,7 @@ class ScheduleWidget : GlanceAppWidget() {
 
     private fun getErrorIntent(context: Context, throwable: Throwable): PendingIntent {
         val intent = Intent(context, ScheduleWidget::class.java)
-        intent.setAction("widgetError")
+        intent.action = "widgetError"
         return PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
     }
 
@@ -104,20 +102,9 @@ fun ScheduleContent(doFetchSchedule: Boolean = true) {
         loading.value = true
         schedule.clear()
         if (doFetchSchedule) {
-            val job = launch {
-                try {
-                    schedule.addAll(scheduleInstance.fetchSchedule(date.value))
-                    delay(Duration.ofMillis(200))
-                    loading.value = false
-                } catch (e: Exception) {
-                    Log.d("ERROR", e.toString())
-                    schedule.add(Lesson(subjectId = "ERR", name = e.toString()))
-                } finally {
-                    loading.value = false
-                }
-            }
-            delay(Duration.ofMillis(2000))
-            job.cancelAndJoin()
+            schedule.addAll(scheduleInstance.fetchSchedule(date.value))
+            delay(Duration.ofMillis(200))
+            loading.value = false
         }
         loading.value = false
         Log.d("CHECK UPDATE", schedule.toString())
@@ -150,7 +137,7 @@ fun ScheduleContent(doFetchSchedule: Boolean = true) {
             Text(
                 text = "${date.value.format(DateTimeFormatter.ISO_DATE)}",
                 style = TextStyle(color = GlanceTheme.colors.onSurface),
-                modifier = GlanceModifier.padding(6.dp)
+                modifier = GlanceModifier.padding(6.dp).cornerRadius(14.dp)
                     .clickable { if (!loading.value) date.value = LocalDate.now() }
             )
             Box(
@@ -183,6 +170,18 @@ fun ScheduleContent(doFetchSchedule: Boolean = true) {
                                 ),
                                 modifier = GlanceModifier
                                     .background(GlanceTheme.colors.error)
+                                    .fillMaxWidth()
+                                    .padding(7.5.dp)
+                                    .cornerRadius(12.5.dp)
+                            )
+                        else if (lesson.subjectId == "TIMEOUT")
+                            Text(
+                                text = lesson.name,
+                                style = TextStyle(
+                                    color = GlanceTheme.colors.onErrorContainer
+                                ),
+                                modifier = GlanceModifier
+                                    .background(GlanceTheme.colors.errorContainer)
                                     .fillMaxWidth()
                                     .padding(7.5.dp)
                                     .cornerRadius(12.5.dp)
