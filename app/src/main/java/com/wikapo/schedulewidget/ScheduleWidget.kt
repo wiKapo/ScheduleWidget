@@ -99,7 +99,6 @@ fun ScheduleContent(doFetchSchedule: Boolean = true) {
     if (!doFetchSchedule)
         schedule.addAll(scheduleInstance.getExampleSchedule(10))
 
-
     LaunchedEffect(date.value, update.intValue) {
         Log.d("UPDATE val", update.intValue.toString())
         loading.value = true
@@ -113,7 +112,6 @@ fun ScheduleContent(doFetchSchedule: Boolean = true) {
         Log.d("CHECK UPDATE", schedule.toString())
     }
 
-    Log.d("CHECK2elel", schedule.toString())
     Column(
         modifier = GlanceModifier.fillMaxSize().background(GlanceTheme.colors.widgetBackground),
         verticalAlignment = Alignment.Top,
@@ -194,7 +192,6 @@ fun ScheduleContent(doFetchSchedule: Boolean = true) {
                                         .padding(7.5.dp)
                                         .cornerRadius(12.5.dp)
                                 )
-//                                if (schedule.size - 1 == index) {}
                             }
 
                             else -> Column(
