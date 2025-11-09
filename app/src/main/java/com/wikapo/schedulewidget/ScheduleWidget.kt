@@ -8,6 +8,7 @@ import android.util.Log
 import android.widget.RemoteViews
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -93,12 +94,14 @@ fun ScheduleContent(doFetchSchedule: Boolean = true) {
     val schedule = remember { mutableStateListOf<Lesson>() }
     val loading = remember { mutableStateOf(false) }
     val date = remember { mutableStateOf(LocalDate.now()) }
+    val update = remember { mutableIntStateOf(0) }
     val scheduleInstance = ScheduleRequester()
     if (!doFetchSchedule)
         schedule.addAll(scheduleInstance.getExampleSchedule(10))
 
 
-    LaunchedEffect(date.value) {
+    LaunchedEffect(date.value, update.intValue) {
+        Log.d("UPDATE val", update.intValue.toString())
         loading.value = true
         schedule.clear()
         if (doFetchSchedule) {
@@ -130,7 +133,7 @@ fun ScheduleContent(doFetchSchedule: Boolean = true) {
                 Image(
                     modifier = GlanceModifier.padding(6.dp),
                     provider = ImageProvider(R.drawable.arrow_back),
-                    contentDescription = "<=",
+                    contentDescription = "previous",
                     colorFilter = ColorFilter.tint(GlanceTheme.colors.inverseOnSurface)
                 )
             }
@@ -148,7 +151,7 @@ fun ScheduleContent(doFetchSchedule: Boolean = true) {
                 Image(
                     modifier = GlanceModifier.padding(6.dp),
                     provider = ImageProvider(R.drawable.arrow_forward),
-                    contentDescription = "=>",
+                    contentDescription = "next",
                     colorFilter = ColorFilter.tint(GlanceTheme.colors.inverseOnSurface)
                 )
             }
@@ -157,13 +160,17 @@ fun ScheduleContent(doFetchSchedule: Boolean = true) {
             LazyColumn(
                 modifier = GlanceModifier
                     .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
-                    .fillMaxSize()
+                    .fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 items(schedule.size) { index ->
                     val lesson = schedule[index]
-                    Column {
-                        if (lesson.subjectId == "ERR")
-                            Text(
+                    Column(
+                        modifier = GlanceModifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        when (lesson.subjectId) {
+                            "ERR" -> Text(
                                 text = lesson.name,
                                 style = TextStyle(
                                     color = GlanceTheme.colors.onError
@@ -174,20 +181,23 @@ fun ScheduleContent(doFetchSchedule: Boolean = true) {
                                     .padding(7.5.dp)
                                     .cornerRadius(12.5.dp)
                             )
-                        else if (lesson.subjectId == "TIMEOUT")
-                            Text(
-                                text = lesson.name,
-                                style = TextStyle(
-                                    color = GlanceTheme.colors.onErrorContainer
-                                ),
-                                modifier = GlanceModifier
-                                    .background(GlanceTheme.colors.errorContainer)
-                                    .fillMaxWidth()
-                                    .padding(7.5.dp)
-                                    .cornerRadius(12.5.dp)
-                            )
-                        else
-                            Column(
+
+                            "TIMEOUT" -> {
+                                Text(
+                                    text = lesson.name,
+                                    style = TextStyle(
+                                        color = GlanceTheme.colors.onErrorContainer
+                                    ),
+                                    modifier = GlanceModifier
+                                        .background(GlanceTheme.colors.errorContainer)
+                                        .fillMaxWidth()
+                                        .padding(7.5.dp)
+                                        .cornerRadius(12.5.dp)
+                                )
+//                                if (schedule.size - 1 == index) {}
+                            }
+
+                            else -> Column(
                                 modifier = GlanceModifier
                                     .padding(10.dp, 5.dp)
                                     .background(if (index % 2 == 1) GlanceTheme.colors.secondaryContainer else GlanceTheme.colors.tertiaryContainer)
@@ -224,7 +234,25 @@ fun ScheduleContent(doFetchSchedule: Boolean = true) {
                                     )
                                 }
                             }
+                        }
                         Spacer(GlanceModifier.height(5.dp))
+                    }
+                }
+                if (schedule[0].subjectId == "ERR" || schedule[0].subjectId == "TIMEOUT") {
+                    item {
+                        Box(
+                            modifier = GlanceModifier
+                                .background(if (!loading.value) GlanceTheme.colors.primary else GlanceTheme.colors.secondary)
+                                .cornerRadius(15.dp)
+                                .size(50.dp)
+                                .clickable { if (!loading.value) update.intValue += 1 }) {
+                            Image(
+                                modifier = GlanceModifier.padding(6.dp).fillMaxSize(),
+                                provider = ImageProvider(R.drawable.refresh),
+                                contentDescription = "refresh",
+                                colorFilter = ColorFilter.tint(GlanceTheme.colors.inverseOnSurface)
+                            )
+                        }
                     }
                 }
             }
