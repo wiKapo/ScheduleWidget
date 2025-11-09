@@ -71,7 +71,7 @@ class ScheduleRequester() {
         Log.d("Example", "Loading example schedule")
         val schedule: MutableList<Lesson> = ArrayList()
         for (i in 0..amount) {
-            schedule += Lesson(name = "Lekcja $i", place = "Sala ${i + 100}")
+            schedule += Lesson(name = "Lekcja $i", place = "Sala ${i + 100}", teacher = "Aaaa Bbbb")
         }
         return schedule
     }
