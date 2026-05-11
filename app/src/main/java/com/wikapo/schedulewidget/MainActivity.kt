@@ -61,7 +61,7 @@ class MainActivity : ComponentActivity() {
             ScheduleWidgetTheme {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
-                    topBar = { ScheduleTitle() }
+                    bottomBar = { ScheduleFooter() }
                 ) { paddingValues ->
                     if (date == null)
                         Schedule(LocalDate.now(), paddingValues)
@@ -80,24 +80,43 @@ class MainActivity : ComponentActivity() {
 // TODO Dodanie wyświetlania dni tygodnia
 
 @Composable
-fun ScheduleTitle() {
+fun ScheduleFooter() {
     Row(
         modifier = Modifier
-            .padding(top = 30.dp)
-            .background(color = MaterialTheme.colorScheme.outlineVariant)
+            .padding(bottom = 20.dp)
+//            .background(color = MaterialTheme.colorScheme.outlineVariant)
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.Center
     ) {
-        Text(
-            text = "Plan zajęć stworzony przez ",
-            fontWeight = FontWeight(400),
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-        Text(
-            text = "wiKapo",
-            fontWeight = FontWeight(700),
-            color = MaterialTheme.colorScheme.onSurface,
-        )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row() {
+                Text(
+                    text = "Aplikacja wykonana przez ",
+                    fontWeight = FontWeight(400),
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = "wiKapo",
+                    fontWeight = FontWeight(800),
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+            Row() {
+                Text(
+                    text = "API wykonane przez ",
+                    fontWeight = FontWeight(400),
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = "Fen",
+                    fontWeight = FontWeight(800),
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+        }
+
     }
 }
 
@@ -289,9 +308,9 @@ fun Schedule(
 
 @Preview(showBackground = true)
 @Composable
-fun ScheduleTitlePreview() {
+fun ScheduleFooterPreview() {
     ScheduleWidgetTheme {
-        ScheduleTitle()
+        ScheduleFooter()
     }
 }
 
