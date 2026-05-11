@@ -237,7 +237,8 @@ fun Schedule(
                                     Text(
                                         text = "[${lesson.kind}]\t\t${lesson.name}",
                                         fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        modifier = Modifier.fillMaxWidth()
                                     )
                                     Text(
                                         text = lesson.teacher,
