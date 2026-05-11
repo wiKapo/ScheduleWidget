@@ -117,7 +117,10 @@ fun ScheduleContent(doFetchSchedule: Boolean = true) {
     }
 
     Column(
-        modifier = GlanceModifier.fillMaxSize().background(GlanceTheme.colors.widgetBackground),
+        modifier = GlanceModifier
+            .fillMaxSize()
+            .background(GlanceTheme.colors.widgetBackground)
+            .cornerRadius(25.dp),
         verticalAlignment = Alignment.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
