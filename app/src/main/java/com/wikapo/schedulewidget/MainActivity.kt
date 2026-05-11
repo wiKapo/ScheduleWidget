@@ -76,8 +76,6 @@ class MainActivity : ComponentActivity() {
 //TODO Ustawienia
 // Przezroczystość
 // Pokaż weekend
-// TODO Ładniejsze wyświetlanie daty
-// TODO Dodanie wyświetlania dni tygodnia
 
 @Composable
 fun ScheduleFooter() {
@@ -174,7 +172,7 @@ fun Schedule(
                 onClick = { if (!loading.value) date.value = LocalDate.now() },
             ) {
                 Text(
-                    text = date.value.format(DateTimeFormatter.ISO_DATE),
+                    text = date.value.format(DateTimeFormatter.ofPattern("dd.MM.yyyy, EEE")),
                     color = MaterialTheme.colorScheme.onSurface,
                     fontSize = 15.sp
                 )

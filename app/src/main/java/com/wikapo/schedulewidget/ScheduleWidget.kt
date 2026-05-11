@@ -19,6 +19,7 @@ import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.ImageProvider
+import androidx.glance.LocalSize
 import androidx.glance.action.ActionParameters
 import androidx.glance.action.actionParametersOf
 import androidx.glance.action.actionStartActivity
@@ -26,6 +27,7 @@ import androidx.glance.action.clickable
 import androidx.glance.appwidget.CircularProgressIndicator
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
+import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.lazy.LazyColumn
 import androidx.glance.appwidget.provideContent
@@ -62,6 +64,7 @@ class ScheduleWidget : GlanceAppWidget() {
         }
     }
 
+    override val sizeMode: SizeMode = SizeMode.Exact
     private fun getErrorIntent(context: Context, throwable: Throwable): PendingIntent {
         val intent = Intent(context, ScheduleWidget::class.java)
         intent.action = "widgetError"
@@ -83,8 +86,6 @@ class ScheduleWidget : GlanceAppWidget() {
         AppWidgetManager.getInstance(context).updateAppWidget(appWidgetId, rv)
     }
 }
-//TODO Dzień tygodnia na 3+ szerokość
-//TODO Krótka nazwa przedmiotu i godzina na szerokości 2
 //TODO Przsuwając aplikację można otworzyć ustawienia
 //TODO Przytrzymując widgeta pojawai się FAB do ustawień widgeta
 //TODO Prgogress bar obecnie trwających zajęć
@@ -96,6 +97,9 @@ fun ScheduleContent(doFetchSchedule: Boolean = true) {
     val date = remember { mutableStateOf(LocalDate.now()) }
     val update = remember { mutableIntStateOf(0) }
     val scheduleInstance = ScheduleRequester()
+
+    val size = LocalSize.current
+
     if (!doFetchSchedule)
         schedule.addAll(scheduleInstance.getExampleSchedule(10))
 
@@ -136,7 +140,7 @@ fun ScheduleContent(doFetchSchedule: Boolean = true) {
                 )
             }
             Text(
-                text = "${date.value.format(DateTimeFormatter.ISO_DATE)}",
+                text = date.value.format(DateTimeFormatter.ofPattern(if (size.width > 175.dp) "dd.MM.yyyy, EEE" else "dd.MM, EEE")),
                 style = TextStyle(color = GlanceTheme.colors.onSurface),
                 modifier = GlanceModifier.padding(6.dp).cornerRadius(14.dp)
                     .clickable { if (!loading.value) date.value = LocalDate.now() }
@@ -208,7 +212,13 @@ fun ScheduleContent(doFetchSchedule: Boolean = true) {
                                     )
                             ) {
                                 Text(
-                                    text = "[${lesson.kind}]\t\t${lesson.name}",
+                                    text = if (size.width > 175.dp) "[${lesson.kind}]\t\t${lesson.name}"
+                                    else {
+                                        var result = "[${lesson.kind}]\t\t"
+                                        lesson.name.split(" ")
+                                            .forEach { s -> result += s[0].uppercase() }
+                                        result
+                                    },
                                     style = TextStyle(
                                         fontWeight = FontWeight.Bold,
                                         color = GlanceTheme.colors.onSurface
@@ -217,7 +227,8 @@ fun ScheduleContent(doFetchSchedule: Boolean = true) {
                                 )
                                 Row(modifier = GlanceModifier.fillMaxWidth()) {
                                     Text(
-                                        text = "${lesson.startHour}:00 - ${lesson.endHour}:00",
+                                        text = if (size.width > 175.dp) "${lesson.startHour}:00 - ${lesson.endHour}:00"
+                                        else "${lesson.startHour} - ${lesson.endHour}",
                                         style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant)
                                     )
                                     Text(
