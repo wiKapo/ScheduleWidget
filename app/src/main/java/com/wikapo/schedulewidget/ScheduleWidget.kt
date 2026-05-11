@@ -27,6 +27,7 @@ import androidx.glance.action.clickable
 import androidx.glance.appwidget.CircularProgressIndicator
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
+import androidx.glance.appwidget.LinearProgressIndicator
 import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.lazy.LazyColumn
@@ -51,6 +52,7 @@ import androidx.glance.text.TextStyle
 import kotlinx.coroutines.time.delay
 import java.time.Duration
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 class ScheduleWidgetReceiver : GlanceAppWidgetReceiver() {
@@ -88,10 +90,9 @@ class ScheduleWidget : GlanceAppWidget() {
 }
 //TODO Przsuwając aplikację można otworzyć ustawienia
 //TODO Przytrzymując widgeta pojawai się FAB do ustawień widgeta
-//TODO Prgogress bar obecnie trwających zajęć
 
 @Composable
-fun ScheduleContent(doFetchSchedule: Boolean = true) {
+fun ScheduleContent(previewMode: Boolean = false) {
     val schedule = remember { mutableStateListOf<Lesson>() }
     val loading = remember { mutableStateOf(false) }
     val date = remember { mutableStateOf(LocalDate.now()) }
@@ -99,15 +100,16 @@ fun ScheduleContent(doFetchSchedule: Boolean = true) {
     val scheduleInstance = ScheduleRequester()
 
     val size = LocalSize.current
+    val currentTime = LocalTime.now()
 
-    if (!doFetchSchedule)
+    if (previewMode)
         schedule.addAll(scheduleInstance.getExampleSchedule(10))
 
     LaunchedEffect(date.value, update.intValue) {
         Log.d("UPDATE val", update.intValue.toString())
         loading.value = true
         schedule.clear()
-        if (doFetchSchedule) {
+        if (!previewMode) {
             schedule.addAll(scheduleInstance.fetchSchedule(date.value))
             delay(Duration.ofMillis(200))
             loading.value = false
@@ -201,47 +203,67 @@ fun ScheduleContent(doFetchSchedule: Boolean = true) {
                                 )
                             }
 
-                            else -> Column(
-                                modifier = GlanceModifier
-                                    .padding(10.dp, 5.dp)
-                                    .background(if (index % 2 == 1) GlanceTheme.colors.secondaryContainer else GlanceTheme.colors.tertiaryContainer)
-                                    .cornerRadius(12.5.dp)
-                                    .clickable(
-                                        onClick = actionStartActivity<MainActivity>(
-                                            parameters = actionParametersOf(
-                                                pairs = arrayOf(ActionParameters.Key<LocalDate>("date") to date.value)
+                            else -> Box(modifier = GlanceModifier.cornerRadius(12.5.dp)) {
+                                Column(
+                                    modifier = GlanceModifier
+                                        .padding(10.dp, 5.dp)
+                                        .background(if (index % 2 == 1) GlanceTheme.colors.secondaryContainer else GlanceTheme.colors.tertiaryContainer)
+                                        .clickable(
+                                            onClick = actionStartActivity<MainActivity>(
+                                                parameters = actionParametersOf(
+                                                    pairs = arrayOf(
+                                                        ActionParameters.Key<LocalDate>("date") to date.value
+                                                    )
+                                                )
                                             )
                                         )
-                                    )
-                            ) {
-                                Text(
-                                    text = if (size.width > 175.dp) "[${lesson.kind}]\t\t${lesson.name}"
-                                    else {
-                                        var result = "[${lesson.kind}]\t\t"
-                                        lesson.name.split(" ")
-                                            .forEach { s -> result += s[0].uppercase() }
-                                        result
-                                    },
-                                    style = TextStyle(
-                                        fontWeight = FontWeight.Bold,
-                                        color = GlanceTheme.colors.onSurface
-                                    ),
-                                    maxLines = 1
-                                )
-                                Row(modifier = GlanceModifier.fillMaxWidth()) {
+                                ) {
+                                    val textColor =
+                                        if (currentTime.hour < lesson.endHour) GlanceTheme.colors.onSurface else GlanceTheme.colors.onSurfaceVariant
+                                    val secondaryTextColor =
+                                        if (currentTime.hour < lesson.endHour) GlanceTheme.colors.onSurfaceVariant else GlanceTheme.colors.onSurfaceVariant
                                     Text(
-                                        text = if (size.width > 175.dp) "${lesson.startHour}:00 - ${lesson.endHour}:00"
-                                        else "${lesson.startHour} - ${lesson.endHour}",
-                                        style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant)
-                                    )
-                                    Text(
-                                        modifier = GlanceModifier.fillMaxWidth(),
-                                        text = lesson.place,
+                                        text = if (size.width > 175.dp) "[${lesson.kind}]\t\t${lesson.name}"
+                                        else {
+                                            var result = "[${lesson.kind}]\t\t"
+                                            lesson.name.split(" ")
+                                                .forEach { s -> result += s[0].uppercase() }
+                                            result
+                                        },
                                         style = TextStyle(
                                             fontWeight = FontWeight.Bold,
-                                            textAlign = TextAlign.End,
-                                            color = GlanceTheme.colors.onSurface
+                                            color = textColor
+                                        ),
+                                        maxLines = 1
+                                    )
+                                    Row(modifier = GlanceModifier.fillMaxWidth()) {
+                                        Text(
+                                            text = if (size.width > 175.dp) "${lesson.startHour}:00 - ${lesson.endHour}:00"
+                                            else "${lesson.startHour} - ${lesson.endHour}",
+                                            style = TextStyle(color = secondaryTextColor)
                                         )
+                                        Text(
+                                            modifier = GlanceModifier.fillMaxWidth(),
+                                            text = lesson.place,
+                                            style = TextStyle(
+                                                fontWeight = FontWeight.Bold,
+                                                textAlign = TextAlign.End,
+                                                color = textColor
+                                            )
+                                        )
+                                    }
+                                }
+                                if (!previewMode && date.value == LocalDate.now() &&
+                                    currentTime.hour >= lesson.startHour && currentTime.hour < lesson.endHour
+                                ) {
+                                    LinearProgressIndicator(
+                                        modifier = GlanceModifier
+                                            .fillMaxWidth()
+                                            .padding(top = (-6).dp)
+                                            .height(4.dp),
+                                        progress = (currentTime.minusHours(lesson.startHour.toLong())).toSecondOfDay() / ((lesson.endHour - lesson.startHour) * 3600f),
+                                        color = GlanceTheme.colors.primary,
+                                        backgroundColor = GlanceTheme.colors.primaryContainer
                                     )
                                 }
                             }
@@ -298,5 +320,5 @@ fun ScheduleContent(doFetchSchedule: Boolean = true) {
 @Preview(160, 160)
 @Composable
 private fun ScheduleContentPreview() {
-    ScheduleContent(false)
+    ScheduleContent(true)
 }
