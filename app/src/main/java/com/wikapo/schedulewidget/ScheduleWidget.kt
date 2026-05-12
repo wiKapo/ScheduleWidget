@@ -219,17 +219,24 @@ fun ScheduleContent(previewMode: Boolean = false) {
                                         )
                                 ) {
                                     val textColor =
-                                        if (currentTime.hour < lesson.endHour) GlanceTheme.colors.onSurface else GlanceTheme.colors.onSurfaceVariant
+                                        if (date.value > LocalDate.now() || currentTime.hour < lesson.endHour && date.value == LocalDate.now())
+                                            GlanceTheme.colors.onSurface
+                                        else
+                                            GlanceTheme.colors.onSurfaceVariant
                                     val secondaryTextColor =
-                                        if (currentTime.hour < lesson.endHour) GlanceTheme.colors.onSurfaceVariant else GlanceTheme.colors.onSurfaceVariant
+                                        if (date.value > LocalDate.now() || currentTime.hour < lesson.endHour && date.value == LocalDate.now())
+                                            GlanceTheme.colors.onSurfaceVariant
+                                        else
+                                            GlanceTheme.colors.onSurfaceVariant
                                     Text(
-                                        text = if (size.width > 175.dp) "[${lesson.kind}]\t\t${lesson.name}"
-                                        else {
-                                            var result = "[${lesson.kind}]\t\t"
-                                            lesson.name.split(" ")
-                                                .forEach { s -> result += s[0].uppercase() }
-                                            result
-                                        },
+                                        text = "DATE" + date.value + " NOW" + LocalDate.now(),
+//                                        text = if (size.width > 175.dp) "[${lesson.kind}]\t\t${lesson.name}"
+//                                        else {
+//                                            var result = "[${lesson.kind}]\t\t"
+//                                            lesson.name.split(" ")
+//                                                .forEach { s -> result += s[0].uppercase() }
+//                                            result
+//                                        },
                                         style = TextStyle(
                                             fontWeight = FontWeight.Bold,
                                             color = textColor
